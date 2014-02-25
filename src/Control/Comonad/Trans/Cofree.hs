@@ -34,6 +34,7 @@ import Control.Comonad
 import Control.Comonad.Trans.Class
 import Control.Comonad.Cofree.Class
 import Control.Category
+import Data.Functor.Plus
 import Data.Bifunctor
 import Data.Bifoldable
 import Data.Bitraversable
@@ -273,20 +274,25 @@ instance Ord (w (CofreeF f a (CofreeT f w a))) => Ord (CofreeT f w a) where
 --   return $ c :< (o <|> fmap (>>= (\x -> g x >>= h)) m)
 -- ==
 -- (C wa) >>= (\x -> g x >>= h)
-  
+{-
 instance (Alternative f, Monad w) => Monad (CofreeT f w) where
   return = CofreeT . return . (:< empty)
   (CofreeT cx) >>= f = CofreeT $ do
     (a :< m) <- cx
     (b :< n) <- runCofreeT $ f a
     return $ b :< (n <|> fmap (>>= f) m)
+-}
+
+instance (Plus f, Monad w) => Monad (CofreeT f w) where
+  return = CofreeT . return . (:< zero)
+  (CofreeT cx) >>= f = CofreeT $ do
+    (a :< m) <- cx
+    (b :< n) <- runCofreeT $ f a
+    return $ b :< (n <!> fmap (>>= f) m)
 
 -- TODO: To justify the Applicative constraint instead of a Monad w constraint,
 -- it must be shown that the result is an applicative functor, even if 'w' is not
 -- a monad.
-instance (Alternative f, Applicative w) =>
-         Applicative (CofreeT f w) where
-  pure = CofreeT . pure . (:< empty)
   
   -- If w is also a monad, then (<*>) equals (`ap`)
   --
@@ -360,12 +366,26 @@ instance (Alternative f, Applicative w) =>
   -- 
   -- (Cofree wf) <*> (CofreeT wa)
   --
-  (CofreeT wf) <*> aa@(CofreeT wa) = CofreeT $
+{-
+instance (Alternative f, Applicative w) =>
+         Applicative (CofreeT f w) where
+  pure = CofreeT . pure . (:< empty)
+
+  (CofreeT wf) <*> ca@(CofreeT wa) = CofreeT $
     ( \(f :< t) -> 
-      -- (b :< n) <- runCofreeT $ fmap f wa
       \(a)      ->  
       let (b :< n) = bimap f (fmap f) a in 
-      b :< (n <|> fmap (<*> aa) t)) <$> wf <*> wa
+      b :< (n <|> fmap (<*> ca) t)) <$> wf <*> wa
+-}
+instance (Plus f, Applicative w) =>
+         Applicative (CofreeT f w) where
+  pure = CofreeT . pure . (:< zero)
+
+  (CofreeT wf) <*> ca@(CofreeT wa) = CofreeT $
+    ( \(f :< t) -> 
+      \(a)      ->  
+      let (b :< n) = bimap f (fmap f) a in 
+      b :< (n <!> fmap (<*> ca) t)) <$> wf <*> wa
 
 -- | Unfold a @CofreeT@ comonad transformer from a coalgebra and an initial comonad.
 coiterT :: (Functor f, Comonad w) => (w a -> f (w a)) -> w a -> CofreeT f w a

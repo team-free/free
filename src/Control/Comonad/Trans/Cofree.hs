@@ -140,16 +140,30 @@ instance (Alternative f, Monad w) => Monad (CofreeT f w) where
     (a :< m) <- cx
     (b :< n) <- runCofreeT $ f a
     return $ b :< (n <|> fmap (>>= f) m)
-         
-instance (Alternative f, Applicative w) => Applicative (CofreeT f w) where
+
+-- Enough to show equivalent behaviour for monadic instances
+instance (Alternative f, Applicative w) =>
+         Applicative (CofreeT f w) where
   pure x = CofreeT $ pure $ x :< empty
-  (CofreeT wf) <*> (CofreeT wa) = CofreeT $
-    (\(f :< t) (a :< m) ->
-      (f a) :< ((liftA2 (<*>) t m) <|>
-                ( fmap f <$>  m)))
-    <$>
-    wf <*> wa
-    
+  -- Equivalent to the Monad
+  -- 
+  -- (Cofree wf) `ap` a@(Cofree wa) ==
+  -- (Cofree wf) >>= (\f -> wa >>= (a -> f a)) ==
+  -- Cofree $ wf >>= (\(f :< t) -> wa >>= (a -> f a)) ==
+  --        ···   ??? ··· 
+  -- (Cofree wf) <*> (CofreeT wa)
+  -- @
+  --  do
+  --    f <- wf
+  --    a <- wa
+  --    return $ f a
+  -- @
+  (CofreeT wf) <*> aa@(CofreeT wa) = CofreeT $
+    ( \(f :< t) -> 
+      -- (b :< n) <- runCofreeT $ fmap f wa
+      \(a)      ->  
+      let (b :< n) = bimap f (fmap f) a in 
+      b :< (n <|> fmap (<*> aa) t)) <$> wf <*> wa
 
 -- | Unfold a @CofreeT@ comonad transformer from a coalgebra and an initial comonad.
 coiterT :: (Functor f, Comonad w) => (w a -> f (w a)) -> w a -> CofreeT f w a

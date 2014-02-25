@@ -136,17 +136,19 @@ instance Ord (w (CofreeF f a (CofreeT f w a))) => Ord (CofreeT f w a) where
 --  + The monad laws are fulfiled.
 instance (Alternative f, Monad w) => Monad (CofreeT f w) where
   return  x = CofreeT $ return $ x :< empty
-  cx >>= f = CofreeT $ do
-    (x :< tx) <- runCofreeT cx
-    (y :< yx) <- runCofreeT $ f x
-    return $ y :< (yx <|> fmap (>>= f) tx)
+  (CofreeT cx) >>= f = CofreeT $ do
+    (a :< m) <- cx
+    (b :< n) <- runCofreeT $ f a
+    return $ b :< (n <|> fmap (>>= f) m)
          
 instance (Alternative f, Applicative w) => Applicative (CofreeT f w) where
   pure x = CofreeT $ pure $ x :< empty
-  (CofreeT wf) <*> (CofreeT wx) = CofreeT $
-    (\(f :< tf) (x :< tx) ->
-      (f x) :< (( (<*>) <$> tf <*> tx) <|> (fmap ((pure f) <*>) tx))
-    ) <$> wf <*> wx
+  (CofreeT wf) <*> (CofreeT wa) = CofreeT $
+    (\(f :< t) (a :< m) ->
+      (f a) :< ((liftA2 (<*>) t m) <|>
+                ( fmap f <$>  m)))
+    <$>
+    wf <*> wa
     
 
 -- | Unfold a @CofreeT@ comonad transformer from a coalgebra and an initial comonad.

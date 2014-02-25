@@ -83,6 +83,8 @@ instance Foldable f => Bifoldable (CofreeF f) where
 instance Traversable f => Bitraversable (CofreeF f) where
   bitraverse f g (a :< as) = (:<) <$> f a <*> traverse g as
 
+  
+
 -- | This is a cofree comonad of some functor @f@, with a comonad @w@ threaded through it at each level.
 newtype CofreeT f w a = CofreeT { runCofreeT :: w (CofreeF f a (CofreeT f w a)) }
 
@@ -128,6 +130,24 @@ instance Eq (w (CofreeF f a (CofreeT f w a))) => Eq (CofreeT f w a) where
 
 instance Ord (w (CofreeF f a (CofreeT f w a))) => Ord (CofreeT f w a) where
   compare (CofreeT a) (CofreeT b) = compare a b
+
+-- TODO: Proof that
+--  + The definitions for CofreeT Identity are equivalent to those in the Cofree module
+--  + The monad laws are fulfiled.
+instance (Alternative f, Monad w) => Monad (CofreeT f w) where
+  return  x = CofreeT $ return $ x :< empty
+  cx >>= f = CofreeT $ do
+    (x :< tx) <- runCofreeT cx
+    (y :< yx) <- runCofreeT $ f x
+    return $ y :< (yx <|> fmap (>>= f) tx)
+         
+instance (Alternative f, Applicative w) => Applicative (CofreeT f w) where
+  pure x = CofreeT $ pure $ x :< empty
+  (CofreeT wf) <*> (CofreeT wx) = CofreeT $
+    (\(f :< tf) (x :< tx) ->
+      (f x) :< (( (<*>) <$> tf <*> tx) <|> (fmap ((pure f) <*>) tx))
+    ) <$> wf <*> wx
+    
 
 -- | Unfold a @CofreeT@ comonad transformer from a coalgebra and an initial comonad.
 coiterT :: (Functor f, Comonad w) => (w a -> f (w a)) -> w a -> CofreeT f w a

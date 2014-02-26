@@ -43,7 +43,6 @@ import Control.Monad(ap)
 import Control.Monad.Zip
 import Data.Functor.Bind
 import Data.Functor.Extend
-import Data.Functor.Plus
 import Data.Distributive
 import Data.Foldable
 import Data.Semigroup
@@ -163,21 +162,11 @@ instance ComonadApply f => ComonadApply (Cofree f) where
   (_ :< fs)  @> (a :< as) = a :< (( @>) <$> fs <@> as)
   {-# INLINE (@>) #-}
 
-{-
-Specialized version of Applicative. Equivalent to:
-
 instance Alternative f => Applicative (Cofree f) where
   pure = return
   {-# INLINE pure #-}
   (<*>) = ap
   {-# INLINE (<*>) #-}
--}
-
-instance Alternative f => Applicative (Cofree f) where
-  pure x = x :< empty
-  (f :< fs) <*> as =
-    let b :< bs = fmap f as in
-    b :< (bs <|> fmap (<*> as) fs)
 
 instance (Show (f (Cofree f a)), Show a) => Show (Cofree f a) where
   showsPrec d (a :< as) = showParen (d > 5) $

@@ -133,15 +133,15 @@ instance Ord (w (CofreeF f a (CofreeT f w a))) => Ord (CofreeT f w a) where
 
 instance (Alternative f, Monad w) => Monad (CofreeT f w) where
   return = CofreeT . return . (:< empty)
+  {-# INLINE return #-}
   (CofreeT cx) >>= f = CofreeT $ do
     (a :< m) <- cx
     (b :< n) <- runCofreeT $ f a
     return $ b :< (n <|> fmap (>>= f) m)
 
-instance (Alternative f, Applicative w) =>
-         Applicative (CofreeT f w) where
+instance (Alternative f, Applicative w) => Applicative (CofreeT f w) where
   pure = CofreeT . pure . (:< empty)
-  
+  {-# INLINE pure #-}
   (CofreeT wf) <*> aa@(CofreeT wa) = CofreeT $
     ( \(f :< t) -> 
       \(a)      ->  

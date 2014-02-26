@@ -83,8 +83,6 @@ instance Foldable f => Bifoldable (CofreeF f) where
 instance Traversable f => Bitraversable (CofreeF f) where
   bitraverse f g (a :< as) = (:<) <$> f a <*> traverse g as
 
-  
-
 -- | This is a cofree comonad of some functor @f@, with a comonad @w@ threaded through it at each level.
 newtype CofreeT f w a = CofreeT { runCofreeT :: w (CofreeF f a (CofreeT f w a)) }
 

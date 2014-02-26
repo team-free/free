@@ -142,8 +142,8 @@ instance (Alternative f, Applicative w) => Applicative (CofreeT f w) where
   {-# INLINE pure #-}
   (CofreeT wf) <*> aa@(CofreeT wa) = CofreeT $
     ( \(f :< t) -> 
-      \(a)      ->  
-      let (b :< n) = bimap f (fmap f) a in 
+      \(a)      ->
+      let (b :< n) = bimap f (fmap f) a in
       b :< (n <|> fmap (<*> aa) t)) <$> wf <*> wa
 
 -- | Unfold a @CofreeT@ comonad transformer from a coalgebra and an initial comonad.

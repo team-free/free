@@ -141,7 +141,7 @@ instance (Alternative f, Applicative w) => Applicative (CofreeT f w) where
   pure = CofreeT . pure . (:< empty)
   {-# INLINE pure #-}
   (CofreeT wf) <*> aa@(CofreeT wa) = CofreeT $
-    ( \(f :< t) -> 
+    ( \(f :< t) ->
       \(a)      ->
       let (b :< n) = bimap f (fmap f) a in
       b :< (n <|> fmap (<*> aa) t)) <$> wf <*> wa

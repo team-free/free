@@ -10,7 +10,7 @@
 --
 -- Maintainer  :  Edward Kmett <ekmett@gmail.com>
 -- Stability   :  provisional
--- Portability :  MPTCs, fundeps
+-- Portability :  non-portable (rank-2 polymorphism, MTPCs)
 -- 
 -- Church-encoded free monad transformer.
 --

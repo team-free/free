@@ -21,7 +21,11 @@
 ----------------------------------------------------------------------------
 module Control.Comonad.Trans.Coiter
   (
-  -- * The coiterative comonad transformer
+  -- |
+  -- Coiterative comonads represent non-terminating, productive computations.
+  -- 
+  -- It's simpler form, 'Coiter', is an infinite stream of data. 'CoiterT'
+  -- generalizes this notion to an arbitrary comonad.
     CoiterT(..)
   -- * The coiterative comonad
   , Coiter, coiter, runCoiter
@@ -54,10 +58,16 @@ newtype CoiterT w a = CoiterT { runCoiterT :: w (a, CoiterT w a) }
 -- | The coiterative comonad
 type Coiter = CoiterT Identity
 
+-- | Prepends a result to a coiterative computation.
+--
+-- prop> runCoiter . uncurry coiter == id
 coiter :: a -> Coiter a -> Coiter a
 coiter a as = CoiterT $ Identity (a,as)
 {-# INLINE coiter #-}
 
+-- | Extracts the first result from a coiterative computation.
+--
+-- prop> uncurry coiter . runCoiter == id
 runCoiter :: Coiter a -> (a, Coiter a)
 runCoiter = runIdentity . runCoiterT
 {-# INLINE runCoiter #-}

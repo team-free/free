@@ -27,6 +27,20 @@
 ----------------------------------------------------------------------------
 module Control.Monad.Trans.Iter
   (
+  -- |
+  -- Functions in Haskell are meant to be pure. For example, if an expression
+  -- has type Int, there should exist a value of the type such that the expression
+  -- can be replaced by that value in any context without changing the meaning
+  -- of the program.
+  --
+  -- Some computations may perform side effects (@unsafePerformIO@), throw an
+  -- (@error@) exception (using @error@); or not terminate
+  -- (@let infinity = 1 + infinity in infinity@).
+  -- 
+  -- While the 'IO' monad encapsulates side-effects, and the 'Either Error' monad
+  -- encapsulates errors, the 'Iter' monad encapsulates non-termination, preserving
+  -- purity.
+    
   -- * The iterative monad transformer
     IterT(..)
   -- * Capretta's iterative monad
@@ -76,12 +90,19 @@ newtype IterT m a = IterT { runIterT :: m (Either a (IterT m a)) }
   deriving (Typeable)
 #endif
 
+-- | Plain iterative computations.
 type Iter = IterT Identity
 
+-- | Builds an iterative computation from one first step.
+-- 
+-- prop> runIter . iter == id
 iter :: Either a (Iter a) -> Iter a
 iter = IterT . Identity
 {-# INLINE iter #-}
 
+-- | Executes the first step of an iterative computation
+--
+-- prop> iter . runIter == id
 runIter :: Iter a -> Either a (Iter a)
 runIter = runIdentity . runIterT
 {-# INLINE runIter #-}
@@ -195,6 +216,13 @@ instance Monad m => MonadFree Identity (IterT m) where
   wrap = IterT . return . Right . runIdentity
   {-# INLINE wrap #-}
 
+-- | Adds an extra layer to a free monad value.
+--
+-- In particular, for the iterative monad 'Iter', this makes the
+-- computation require one more step, without changing its final
+-- result.
+--
+-- prop> runIter (delay ma) == Right ma 
 delay :: (Monad f, MonadFree f m) => m a -> m a
 delay = wrap . return
 {-# INLINE delay #-}

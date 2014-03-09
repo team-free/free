@@ -34,14 +34,14 @@ module Control.Monad.Trans.Iter
   -- of the program.
   --
   -- Some computations may perform side effects (@unsafePerformIO@), throw an
-  -- (@error@) exception (using @error@); or not terminate
+  -- exception (using @error@); or not terminate
   -- (@let infinity = 1 + infinity in infinity@).
   -- 
-  -- While the 'IO' monad encapsulates side-effects, and the 'Either Error' monad
-  -- encapsulates errors, the 'Iter' monad encapsulates non-termination, preserving
-  -- purity. The 'IterT' transformer expresses possibly non-terminating computations
-  -- in an arbitrary monad.
-    
+  -- While the 'IO' monad encapsulates side-effects, and the 'Either'
+  -- monad encapsulates errors, the 'Iter' monad encapsulates
+  -- non-termination. The 'IterT' transformer generalizes non-termination to any monadic
+  -- computation.
+
   -- * The iterative monad transformer
     IterT(..)
   -- * Capretta's iterative monad
@@ -290,13 +290,15 @@ iterDataType = mkDataType "Control.Monad.Iter.IterT" [iterConstr]
 
 -- BEGIN MandelbrotIter.lhs
 {- $example
-This is literate Haskell! To run the example, open the source file and copy
-this comment block into a new file with '.lhs' extension. Compiling with @-O2@
-optimization level is recomended.
+This is literate Haskell! To run the example, open the source and copy
+this comment block into a new file with '.lhs' extension. Compiling to an executable
+file with the @-O2@ optimization level is recomended.
 
-@ \{\-\# LANGUAGE TupleSections, PackageImports, FlexibleContexts, ScopedTypeVariables \#\-\} @
+For example: @ghc -o 'mandelbrot_iter' -O2 MandelbrotIter.lhs ; ./mandelbrot_iter@
 
-> {-# LANGUAGE TupleSections, PackageImports, FlexibleContexts, ScopedTypeVariables #-}
+@ \{\-\# LANGUAGE PackageImports \#\-\} @
+
+> {-# LANGUAGE PackageImports #-}
 
 > import Control.Arrow
 > import Control.Monad.Trans.Iter
@@ -424,8 +426,8 @@ To run this computation, we can just use @retract@, which will run indefinitely:
 > runFractalM :: Canvas -> FractalM a -> IO a
 > runFractalM canvas  = flip runReaderT canvas . retract
 
-Or we can also trade non-termination for getting an incomplete result,
-by using a timeout.
+Or, we can trade non-termination for getting an incomplete result,
+by cutting off after a certain number of steps.
 
 > cut :: (Monad m) => Integer -> IterT m a -> IterT m (Maybe a)
 > cut n | n < 0 = const $ return Nothing

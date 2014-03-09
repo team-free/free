@@ -159,15 +159,11 @@ coiterTDataType = mkDataType "Control.Comonad.Trans.Coiter.CoiterT" [coiterTCons
 {-# NOINLINE coiterTDataType #-}
 #endif
 
-<<<<<<< HEAD
-{- $example
-=======
 -- BEGIN Coiter.lhs
 {- $example
 This is literate Haskell! To run the example, open the source and copy
 this comment block into a new file with '.lhs' extension.
 
->>>>>>> haddock-iter-coiter
 Many numerical approximation methods compute infinite sequences of results; each,
 hopefully, more accurate than the previous one.
 
@@ -240,12 +236,8 @@ future and check if the result improves at all.
 >   Outlook { result = extract solution,
 >             progress = (ferror (extract solution) > foldl1 min sample) } 
 
-<<<<<<< HEAD
-To compute the square root of @c@, we solve the equation @x*x - c = 0@.
-=======
 To compute the square root of @c@, we solve the equation @x*x - c = 0@. We will
 stop whenever the accuracy of the result doesn't improve in the next 5 steps.
->>>>>>> haddock-iter-coiter
 
 > squareRoot :: Double -> Maybe Result
 > squareRoot c = let problem = flip env c (Function { function = (\x -> x*x - c),
@@ -260,7 +252,4 @@ This program will output the result together with the error.
 > main = putStrLn $ show $ (squareRoot 4)
 
 -}
-<<<<<<< HEAD
-=======
 -- END Coiter.lhs
->>>>>>> haddock-iter-coiter
